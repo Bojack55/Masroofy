@@ -3,14 +3,14 @@ A fintech application links each parent with his children to deposit pocket mone
 
 
 ## 1. Team Members
-| Name | ID |
-| :--- | :--- |
-| Moaz Abdelaleem | 13007327 |
-| Eyad ahmed saeed | 13005578 |
-| Omar khaled | 13003972|
-| Omar Samer | 13001857 |
-| Omar Mahmoud | 13006696 |
-| Bahaa Aldin Ahmed | 13002233 |
+| Name | ID | Feature |
+| :--- | :--- | :--- |
+| Moaz Abdelaleem | 13007327 | User Authentication & Hierarchy |
+| Eyad ahmed saeed | 13005578 | Visual Budget Tracker |
+| Omar khaled | 13003972| Wallet Top-Up | 
+| Omar Samer | 13001857 | Transaction History & Audit |
+| Omar Mahmoud | 13006696 | Smart Daily Calculator |
+| Bahaa Aldin Ahmed | 13002233 | User Authentication & Hierarchy |
 
 ## 2. Idea Definition
 **Masroofy** is a closed-loop financial education wallet designed for families. It allows parents to manage allowances digitally, simulating a banking environment for their children. The goal is to promote financial literacy by giving children a safe environment to receive, manage, and track their "pocket money" while giving parents full oversight.
@@ -64,3 +64,31 @@ const UserSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('User', UserSchema);
+
+```
+### Transaction Model (Transaction.js)
+Records every movement of money (Deposit, Transfer, or Expense).
+
+```
+
+JavaScript
+
+const mongoose = require('mongoose');
+
+const TransactionSchema = new mongoose.Schema({
+  // The person who initiated the action
+  senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  
+  // The person receiving money (Same as sender if it's a Deposit)
+  receiverId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  
+  amount: { type: Number, required: true },
+  type: { type: String, enum: ['deposit', 'transfer', 'expense'], required: true },
+  description: { type: String },
+  
+  date: { type: Date, default: Date.now }
+});
+
+module.exports = mongoose.model('Transaction', TransactionSchema);
+```
+
