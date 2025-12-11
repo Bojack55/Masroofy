@@ -1,6 +1,19 @@
-# 💰 MERN Stack Wallet Management System
+# 💰 Masroofy - MERN Stack Wallet Management System
 
 A comprehensive parent-child wallet management system built with the MERN stack (MongoDB, Express, React, Node.js). Parents can manage allowances for their children with real-time balance tracking, smart spending analytics, and complete transaction history.
+
+**Masroofy** is a fintech application that links each parent with their children to deposit pocket money and keep track of their spending and balances, promoting financial literacy in a safe digital environment.
+
+## 👥 Team Members
+
+| Name | ID | Feature |
+| :--- | :--- | :--- |
+| Moaz Abdelaleem | 13007327 | User Authentication & Hierarchy |
+| Eyad Ahmed Saeed | 13005578 | Visual Budget Tracker |
+| Omar Khaled | 13003972 | Wallet Top-Up | 
+| Omar Samer | 13001857 | Transaction History & Audit |
+| Omar Mahmoud | 13006696 | Smart Daily Calculator |
+| Bahaa Aldin Ahmed | 13002233 | User Authentication & Hierarchy |
 
 ## ✨ Features
 
@@ -82,6 +95,19 @@ EBD Proj/
     └── package.json
 ```
 
+## 🧪 API Testing
+
+A comprehensive **Postman Collection** (`EBD_Wallet_API.postman_collection.json`) is included in the repository, demonstrating that all endpoints are working as expected.
+
+### Postman Collection Features:
+- ✅ Complete API endpoint coverage
+- ✅ Automated test scripts for each request
+- ✅ Environment variables for easy configuration
+- ✅ Sequential execution support
+- ✅ Error handling demonstrations
+
+**Import the collection** into Postman and run it to verify all endpoints are functioning correctly.
+
 ## 🛠️ Installation & Setup
 
 ### Prerequisites
@@ -91,7 +117,8 @@ EBD Proj/
 
 ### 1. Clone the Repository
 ```bash
-cd "c:\Users\Eyad\Desktop\EBD Proj"
+git clone https://github.com/Bojack55/Masroofy.git
+cd Masroofy
 ```
 
 ### 2. Backend Setup
@@ -207,7 +234,7 @@ Frontend will run on `http://localhost:3000`
 ### Transaction Model
 ```javascript
 {
-  type: 'deposit' | 'transfer',
+  type: 'deposit' | 'transfer' | 'expense',
   amount: Number,
   senderId: ObjectId,
   receiverId: ObjectId,
@@ -225,15 +252,6 @@ Frontend will run on `http://localhost:3000`
 - [ ] Multi-currency support
 - [ ] Recurring allowances (weekly/monthly)
 - [ ] Parent approval for child withdrawals
-
-## 👥 Team Roles (As Per Requirements)
-
-**Member 1:** Auth & Hierarchy ✅  
-**Member 2:** Wallet Top-Up ✅  
-**Member 3:** P2P Allowance Transfer ✅  
-**Member 4:** Smart Daily Calculator ✅  
-**Member 5:** Visual Budget Tracker ✅  
-**Member 6:** History & Audit ✅  
 
 ## 📄 License
 
