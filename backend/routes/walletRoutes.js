@@ -1,21 +1,14 @@
-/*
- * Omar Khaled - 13003972
- * Feature: Wallet Top-Up
- * 
- * Parents can add money to wallet and send to kids
- * Like a simulated bank deposit
- */
-
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const authMiddleware = require('../middleware/authMiddleware');
 
-// check balance
+// Get Balance (Protected)
 router.get('/balance', authMiddleware, async (req, res) => {
     try {
         const user = await User.findById(req.user._id).select('balance');
+
         res.json({
             success: true,
             balance: user.balance
@@ -29,11 +22,12 @@ router.get('/balance', authMiddleware, async (req, res) => {
     }
 });
 
-// deposit money - parents only
+// Deposit (Top-Up) - Parent Only
 router.post('/deposit', authMiddleware, async (req, res) => {
     try {
         const { amount } = req.body;
 
+        // Check if user is a parent
         if (req.user.role !== 'parent') {
             return res.status(403).json({
                 success: false,
@@ -41,6 +35,7 @@ router.post('/deposit', authMiddleware, async (req, res) => {
             });
         }
 
+        // Validate amount
         if (!amount || amount <= 0) {
             return res.status(400).json({
                 success: false,
@@ -48,11 +43,12 @@ router.post('/deposit', authMiddleware, async (req, res) => {
             });
         }
 
+        // Update user balance
         const user = await User.findById(req.user._id);
         user.balance += parseFloat(amount);
         await user.save();
 
-        // save the transaction
+        // Create transaction record
         const transaction = new Transaction({
             type: 'deposit',
             amount: parseFloat(amount),
@@ -81,11 +77,12 @@ router.post('/deposit', authMiddleware, async (req, res) => {
     }
 });
 
-// transfer to child
+// Transfer - Parent to Child
 router.post('/transfer', authMiddleware, async (req, res) => {
     try {
         const { childId, amount } = req.body;
 
+        // Check if user is a parent
         if (req.user.role !== 'parent') {
             return res.status(403).json({
                 success: false,
@@ -93,6 +90,7 @@ router.post('/transfer', authMiddleware, async (req, res) => {
             });
         }
 
+        // Validate amount
         if (!amount || amount <= 0) {
             return res.status(400).json({
                 success: false,
@@ -100,8 +98,10 @@ router.post('/transfer', authMiddleware, async (req, res) => {
             });
         }
 
+        // Get parent
         const parent = await User.findById(req.user._id);
 
+        // Check if parent has sufficient balance
         if (parent.balance < amount) {
             return res.status(400).json({
                 success: false,
@@ -109,6 +109,7 @@ router.post('/transfer', authMiddleware, async (req, res) => {
             });
         }
 
+        // Get child and verify relationship
         const child = await User.findById(childId);
         if (!child || child.role !== 'child') {
             return res.status(404).json({
@@ -117,7 +118,6 @@ router.post('/transfer', authMiddleware, async (req, res) => {
             });
         }
 
-        // make sure it's their kid
         if (child.parentId.toString() !== parent._id.toString()) {
             return res.status(403).json({
                 success: false,
@@ -125,12 +125,14 @@ router.post('/transfer', authMiddleware, async (req, res) => {
             });
         }
 
+        // Perform transfer
         parent.balance -= parseFloat(amount);
         child.balance += parseFloat(amount);
 
         await parent.save();
         await child.save();
 
+        // Create transaction record
         const transaction = new Transaction({
             type: 'transfer',
             amount: parseFloat(amount),
@@ -162,11 +164,3 @@ router.post('/transfer', authMiddleware, async (req, res) => {
 });
 
 module.exports = router;
-
-/*
- * POSTMAN:
- * GET /api/wallet/balance
- * POST /api/wallet/deposit - { "amount": 500 }
- * POST /api/wallet/transfer - { "childId": "...", "amount": 100 }
- * all need token
- */

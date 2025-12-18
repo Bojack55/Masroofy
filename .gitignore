@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+**/node_modules/
+package-lock.json
+
+# Environment variables
+*.env
+
+# Build outputs
+build/
+dist/
+**/build/
+**/dist/
+
+# IDE
+.vscode/
+.idea/
+
+# Misc
+.DS_Store
+*.log
+.git/index.lock
+
