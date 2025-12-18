@@ -1,15 +1,22 @@
+/*
+ * Moaz Abdelaleem - 13007327
+ * Feature: User Authentication & Hierarchy
+ * 
+ * My part handles login/register for parents
+ * Uses JWT for tokens, bcrypt for passwords
+ */
+
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const authMiddleware = require('../middleware/authMiddleware');
 
-// Register Parent
+// Register new parent account
 router.post('/register', async (req, res) => {
     try {
         const { username, email, password } = req.body;
 
-        // Validate input
         if (!username || !email || !password) {
             return res.status(400).json({
                 success: false,
@@ -17,7 +24,6 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // Check if user already exists
         const existingUser = await User.findOne({ $or: [{ email }, { username }] });
         if (existingUser) {
             return res.status(400).json({
@@ -26,7 +32,6 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // Create new parent user
         const user = new User({
             username,
             email,
@@ -38,7 +43,6 @@ router.post('/register', async (req, res) => {
 
         await user.save();
 
-        // Generate JWT token
         const token = jwt.sign(
             { userId: user._id, role: user.role },
             process.env.JWT_SECRET,
@@ -71,7 +75,6 @@ router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
 
-        // Validate input
         if (!username || !password) {
             return res.status(400).json({
                 success: false,
@@ -79,7 +82,6 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // Find user
         const user = await User.findOne({ username });
         if (!user) {
             return res.status(401).json({
@@ -88,7 +90,6 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // Check password
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
             return res.status(401).json({
@@ -97,7 +98,6 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // Generate JWT token
         const token = jwt.sign(
             { userId: user._id, role: user.role },
             process.env.JWT_SECRET,
@@ -125,72 +125,7 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// Create Child Account (Protected - Parent only)
-router.post('/create-child', authMiddleware, async (req, res) => {
-    try {
-        const { username, password } = req.body;
-
-        // Check if user is a parent
-        if (req.user.role !== 'parent') {
-            return res.status(403).json({
-                success: false,
-                message: 'Only parents can create child accounts'
-            });
-        }
-
-        // Validate input
-        if (!username || !password) {
-            return res.status(400).json({
-                success: false,
-                message: 'Please provide username and password for the child'
-            });
-        }
-
-        // Check if username already exists
-        const existingUser = await User.findOne({ username });
-        if (existingUser) {
-            return res.status(400).json({
-                success: false,
-                message: 'Username already taken'
-            });
-        }
-
-        // Create child user
-        const child = new User({
-            username,
-            password,
-            role: 'child',
-            parentId: req.user._id,
-            balance: 0
-        });
-
-        await child.save();
-
-        // Add child to parent's children array
-        await User.findByIdAndUpdate(req.user._id, {
-            $push: { children: child._id }
-        });
-
-        res.status(201).json({
-            success: true,
-            message: 'Child account created successfully',
-            child: {
-                id: child._id,
-                username: child.username,
-                role: child.role,
-                balance: child.balance
-            }
-        });
-    } catch (error) {
-        console.error('Create child error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error creating child account'
-        });
-    }
-});
-
-// Get User Profile (Protected)
+// Get profile - needs token
 router.get('/profile', authMiddleware, async (req, res) => {
     try {
         const user = await User.findById(req.user._id)
@@ -211,3 +146,16 @@ router.get('/profile', authMiddleware, async (req, res) => {
 });
 
 module.exports = router;
+
+/*
+ * POSTMAN TESTS:
+ * 
+ * 1. POST /api/auth/register
+ *    Body: { "username": "parent1", "email": "parent@test.com", "password": "123456" }
+ * 
+ * 2. POST /api/auth/login
+ *    Body: { "username": "parent1", "password": "123456" }
+ * 
+ * 3. GET /api/auth/profile
+ *    Header: Authorization: Bearer <token>
+ */
