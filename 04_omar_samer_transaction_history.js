@@ -8,9 +8,9 @@
 
 const express = require('express');
 const router = express.Router();
-const Transaction = require('../models/Transaction');
-const User = require('../models/User');
-const authMiddleware = require('../middleware/authMiddleware');
+const Transaction = require('./models/Transaction');
+const User = require('./models/User');
+const authMiddleware = require('./middleware/authMiddleware');
 
 // create expense
 router.post('/', authMiddleware, async (req, res) => {
@@ -240,6 +240,75 @@ router.delete('/:id', authMiddleware, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Server error deleting transaction'
+        });
+    }
+});
+
+// Get child's transactions (parent only)
+router.get('/child/:childId', authMiddleware, async (req, res) => {
+    try {
+        // Only parents can view child transactions
+        if (req.user.role !== 'parent') {
+            return res.status(403).json({
+                success: false,
+                message: 'Only parents can view child transactions'
+            });
+        }
+
+        const { childId } = req.params;
+
+        // Verify the child belongs to this parent
+        const parent = await User.findById(req.user._id).populate('children');
+        const isParentOfChild = parent.children.some(
+            child => child._id.toString() === childId
+        );
+
+        if (!isParentOfChild) {
+            return res.status(403).json({
+                success: false,
+                message: 'This child does not belong to your account'
+            });
+        }
+
+        // Get all transactions where child is sender or receiver
+        const transactions = await Transaction.find({
+            $or: [
+                { senderId: childId },
+                { receiverId: childId }
+            ]
+        })
+            .populate('senderId', 'username')
+            .populate('receiverId', 'username')
+            .sort({ timestamp: -1 })
+            .limit(100);
+
+        const formattedTransactions = transactions.map(tx => {
+            const isIncoming = tx.receiverId && tx.receiverId._id.toString() === childId;
+
+            return {
+                id: tx._id,
+                type: tx.type,
+                amount: tx.amount,
+                direction: isIncoming ? 'incoming' : 'outgoing',
+                sender: tx.senderId ? tx.senderId.username : 'External',
+                receiver: tx.receiverId ? tx.receiverId.username : 'Unknown',
+                description: tx.description,
+                timestamp: tx.timestamp,
+                date: tx.timestamp.toLocaleDateString(),
+                time: tx.timestamp.toLocaleTimeString()
+            };
+        });
+
+        res.json({
+            success: true,
+            transactions: formattedTransactions,
+            count: formattedTransactions.length
+        });
+    } catch (error) {
+        console.error('Get child transactions error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error fetching child transactions'
         });
     }
 });

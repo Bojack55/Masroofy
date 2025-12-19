@@ -8,8 +8,8 @@
 
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
-const authMiddleware = require('../middleware/authMiddleware');
+const User = require('./models/User');
+const authMiddleware = require('./middleware/authMiddleware');
 
 // create child account - parent only
 router.post('/create-child', authMiddleware, async (req, res) => {

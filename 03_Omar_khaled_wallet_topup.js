@@ -8,9 +8,9 @@
 
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
-const Transaction = require('../models/Transaction');
-const authMiddleware = require('../middleware/authMiddleware');
+const User = require('./models/User');
+const Transaction = require('./models/Transaction');
+const authMiddleware = require('./middleware/authMiddleware');
 
 // check balance
 router.get('/balance', authMiddleware, async (req, res) => {
